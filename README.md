@@ -8,4 +8,4 @@
 
 [https://avikepaul123-byte.github.io/AI-Enabled-Conceptual-Assessment-Modules-Economics-Instructional-Design/money_banking_quiz.html](https://avikepaul123-byte.github.io/AI-Enabled-Conceptual-Assessment-Modules-Economics-Instructional-Design/money_banking_quiz.html)
 
-
+[https://avikepaul123-byte.github.io/AI-Enabled-Conceptual-Assessment-Modules-Economics-Instructional-Design/balance_of_payments_quiz_game.html](https://avikepaul123-byte.github.io/AI-Enabled-Conceptual-Assessment-Modules-Economics-Instructional-Design/balance_of_payments_quiz_game.html)
