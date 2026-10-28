@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fit the Line — A CLRM Quiz</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700;800&display=swap');
+
+  :root{
+    --ink:#E6DFCC;
+    --panel:#FBF8F0;
+    --panel-2:#E3DAC2;
+    --chalk:#20293D;
+    --chalk-dim:#4A5468;
+    --muted:#6B7590;
+    --line-red:#C43E28;
+    --teal:#1F7A70;
+    --gold:#9A6B1E;
+    --grid:rgba(32,41,61,0.07);
+    --radius:14px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--chalk);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  /* graph-paper grid */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:36px 36px;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* watermark */
+  .watermark{
+    position:fixed;
+    inset:-50%;
+    width:200%;
+    height:200%;
+    pointer-events:none;
+    z-index:1;
+    display:flex;
+    flex-wrap:wrap;
+    align-content:flex-start;
+    transform:rotate(-28deg);
+    opacity:0.09;
+    user-select:none;
+  }
+  .watermark span{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:2px;
+    color:var(--chalk);
+    white-space:nowrap;
+    padding:26px 34px;
+  }
+
+  .stage{
+    position:relative;
+    z-index:2;
+    max-width:880px;
+    margin:0 auto;
+    padding:48px 22px 80px;
+    min-height:100vh;
+  }
+
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--teal);
+    font-weight:700;
+    margin-bottom:10px;
+  }
+
+  h1.title{
+    font-family:'Lora',serif;
+    font-weight:700;
+    font-size:clamp(34px,6vw,54px);
+    line-height:1.06;
+    margin:0 0 6px;
+    color:var(--chalk);
+  }
+  h1.title em{
+    font-style:italic;
+    color:var(--line-red);
+  }
+
+  .subtitle{
+    color:var(--chalk-dim);
+    font-size:16px;
+    line-height:1.55;
+    max-width:620px;
+    margin:14px 0 30px;
+  }
+
+  /* ---- Hero regression plot ---- */
+  .hero-plot{
+    background:var(--panel);
+    border:1px solid rgba(32,41,61,0.08);
+    border-radius:var(--radius);
+    padding:20px;
+    margin-bottom:34px;
+  }
+  .hero-plot svg{width:100%;height:auto;display:block;}
+  .reg-line{
+    stroke:var(--line-red);
+    stroke-width:3;
+    fill:none;
+    stroke-dasharray:600;
+    stroke-dashoffset:600;
+    animation:draw 1.8s ease forwards 0.3s;
+  }
+  @keyframes draw{ to{stroke-dashoffset:0;} }
+  .dot{ fill:var(--teal); opacity:0; animation:pop 0.5s ease forwards; }
+  @keyframes pop{ to{opacity:0.85;} }
+
+  /* ---- Panels / cards ---- */
+  .panel{
+    background:var(--panel);
+    border:1px solid rgba(32,41,61,0.08);
+    border-radius:var(--radius);
+    padding:28px;
+    margin-bottom:22px;
+  }
+
+  .panel h3{
+    font-family:'Lora',serif;
+    font-size:19px;
+    margin:0 0 14px;
+    color:var(--gold);
+  }
+
+  .panel ul{
+    margin:0;
+    padding-left:20px;
+    color:var(--chalk-dim);
+    line-height:1.9;
+    font-size:15px;
+  }
+  .panel ul li b{color:var(--chalk);}
+
+  label.field-label{
+    display:block;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin-bottom:8px;
+  }
+
+  input.name-input{
+    width:100%;
+    padding:15px 16px;
+    background:var(--panel-2);
+    border:1.5px solid rgba(32,41,61,0.14);
+    border-radius:10px;
+    color:var(--chalk);
+    font-size:17px;
+    font-family:'Inter',sans-serif;
+    outline:none;
+    transition:border-color .2s;
+  }
+  input.name-input:focus{border-color:var(--teal);}
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    background:var(--line-red);
+    color:#1a0e0b;
+    font-weight:700;
+    font-size:15px;
+    border:none;
+    padding:15px 28px;
+    border-radius:10px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    transition:transform .15s, box-shadow .15s;
+    box-shadow:0 6px 0 rgba(0,0,0,0.25);
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn:active{transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,0.25);}
+  .btn.secondary{
+    background:transparent;
+    color:var(--chalk);
+    border:1.5px solid rgba(32,41,61,0.25);
+    box-shadow:none;
+  }
+  .btn.secondary:hover{border-color:var(--teal); color:var(--teal);}
+  .btn:disabled{opacity:0.4; cursor:not-allowed; transform:none;}
+
+  .btn-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:8px;}
+
+  .error-msg{color:var(--line-red); font-size:13px; margin-top:8px; font-family:'JetBrains Mono',monospace; min-height:18px;}
+
+  /* ---- Quiz header stats ---- */
+  .quiz-topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:20px;
+  }
+  .stat{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    font-size:14px;
+    color:var(--chalk);
+    background:var(--panel-2);
+    padding:9px 14px;
+    border-radius:8px;
+    border:1px solid rgba(32,41,61,0.1);
+  }
+  .stat span{color:var(--teal);}
+  .diff-tag{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    font-size:11px;
+    letter-spacing:1.5px;
+    padding:6px 12px;
+    border-radius:20px;
+    text-transform:uppercase;
+  }
+  .diff-easy{background:rgba(73,169,158,0.18); color:var(--teal);}
+  .diff-medium{background:rgba(224,177,92,0.18); color:var(--gold);}
+  .diff-hard{background:rgba(228,89,63,0.18); color:var(--line-red);}
+
+  .timer-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .timer-ring{
+    position:relative;
+    width:46px;height:46px;
+  }
+  .timer-ring svg{transform:rotate(-90deg);}
+  .timer-ring circle.bg{stroke:rgba(32,41,61,0.12); fill:none; stroke-width:4;}
+  .timer-ring circle.fg{stroke:var(--teal); fill:none; stroke-width:4; stroke-linecap:round; transition:stroke-dashoffset 1s linear, stroke .3s;}
+  .timer-num{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800; color:var(--chalk);
+  }
+
+  .q-progress-bar{
+    height:6px;
+    width:100%;
+    background:var(--panel-2);
+    border-radius:6px;
+    overflow:hidden;
+    margin-bottom:26px;
+  }
+  .q-progress-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--teal),var(--line-red));
+    border-radius:6px;
+    transition:width .4s ease;
+  }
+
+  .question-card{
+    background:var(--panel);
+    border:1px solid rgba(32,41,61,0.08);
+    border-radius:var(--radius);
+    padding:32px;
+  }
+  .q-number{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--muted);
+    font-size:13px;
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  .q-text{
+    font-family:'Lora',serif;
+    font-size:22px;
+    line-height:1.4;
+    color:var(--chalk);
+    margin:0 0 26px;
+  }
+
+  .options{display:flex; flex-direction:column; gap:12px;}
+  .option{
+    text-align:left;
+    background:var(--panel-2);
+    border:1.5px solid rgba(32,41,61,0.1);
+    border-radius:10px;
+    padding:16px 18px;
+    color:var(--chalk);
+    font-size:15.5px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+    transition:border-color .15s, background .15s;
+  }
+  .option:hover{border-color:var(--teal);}
+  .option .opt-letter{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    color:var(--muted);
+    flex-shrink:0;
+  }
+  .option.selected{border-color:var(--teal); background:rgba(73,169,158,0.1);}
+  .option.correct{border-color:var(--teal); background:rgba(73,169,158,0.18);}
+  .option.wrong{border-color:var(--line-red); background:rgba(228,89,63,0.18);}
+  .option:disabled, .option.locked{cursor:default;}
+
+  .feedback-line{
+    margin-top:20px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    font-weight:700;
+    min-height:20px;
+  }
+  .feedback-line.ok{color:var(--teal);}
+  .feedback-line.no{color:var(--line-red);}
+
+  /* ---- Score screen ---- */
+  .score-hero{
+    text-align:center;
+    padding:44px 24px;
+    background:var(--panel);
+    border-radius:var(--radius);
+    border:1px solid rgba(32,41,61,0.08);
+    margin-bottom:24px;
+  }
+  .score-num{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    font-size:clamp(56px,10vw,88px);
+    color:var(--line-red);
+    line-height:1;
+  }
+  .score-out-of{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--muted);
+    font-size:16px;
+    margin-top:6px;
+    font-weight:700;
+  }
+  .grade-badge{
+    display:inline-block;
+    margin-top:20px;
+    padding:10px 22px;
+    border-radius:30px;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    font-size:15px;
+    letter-spacing:1px;
+    background:rgba(224,177,92,0.16);
+    color:var(--gold);
+    border:1.5px solid rgba(224,177,92,0.4);
+  }
+  .grade-comment{
+    margin-top:16px;
+    color:var(--chalk-dim);
+    font-size:15px;
+    max-width:480px;
+    margin-left:auto;
+    margin-right:auto;
+    line-height:1.6;
+  }
+
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:14px;
+    margin:26px 0;
+  }
+  .stat-box{
+    background:var(--panel-2);
+    border-radius:10px;
+    padding:18px;
+    text-align:center;
+    border:1px solid rgba(32,41,61,0.08);
+  }
+  .stat-box .n{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    font-size:26px;
+    color:var(--chalk);
+  }
+  .stat-box .l{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-top:4px;
+  }
+
+  .player-tag{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    font-size:14px;
+    color:var(--teal);
+    letter-spacing:1px;
+  }
+
+  /* ---- Review ---- */
+  .review-item{
+    background:var(--panel);
+    border:1px solid rgba(32,41,61,0.08);
+    border-radius:12px;
+    padding:22px 24px;
+    margin-bottom:16px;
+  }
+  .review-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    margin-bottom:12px;
+  }
+  .review-q{
+    font-family:'Lora',serif;
+    font-size:17px;
+    color:var(--chalk);
+    margin:0;
+    line-height:1.4;
+  }
+  .badge{
+    flex-shrink:0;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    font-size:11px;
+    letter-spacing:1px;
+    padding:5px 11px;
+    border-radius:20px;
+  }
+  .badge.correct{background:rgba(73,169,158,0.18); color:var(--teal);}
+  .badge.wrong{background:rgba(228,89,63,0.18); color:var(--line-red);}
+  .review-row{font-size:14px; margin:6px 0; color:var(--chalk-dim);}
+  .review-row b{color:var(--chalk);}
+  .reasoning-box{
+    margin-top:12px;
+    padding:14px 16px;
+    background:var(--panel-2);
+    border-left:3px solid var(--gold);
+    border-radius:6px;
+    font-size:13.5px;
+    color:var(--chalk-dim);
+    line-height:1.6;
+  }
+  .reasoning-box b{color:var(--gold); font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:1px;}
+
+  .footer-credit{
+    text-align:center;
+    color:var(--muted);
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:1.5px;
+    margin-top:40px;
+    opacity:0.6;
+  }
+
+  .hidden{display:none !important;}
+
+  @media (max-width:520px){
+    .stage{padding:32px 16px 60px;}
+    .panel, .question-card{padding:20px;}
+    .q-text{font-size:19px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="watermark" id="watermarkLayer"></div>
+
+<div class="stage">
+
+  <!-- ================= SCREEN 1: LANDING ================= -->
+  <div id="screen-landing">
+    <div class="eyebrow">Interactive Puzzle · Econometrics</div>
+    <h1 class="title">Fit the <em>Line.</em></h1>
+    <p class="subtitle">A 25-question challenge on the Classical Linear Regression Model — assumptions, estimators, and the diagnostics that keep OLS honest. Every right answer scores. No penalty for a guess.</p>
+
+    <div class="hero-plot">
+      <svg viewBox="0 0 700 220" id="heroSvg"></svg>
+    </div>
+
+    <div class="panel">
+      <h3>How this works</h3>
+      <ul>
+        <li><b>25 questions</b>, one screen at a time — difficulty rises from easy to hard as you go.</li>
+        <li>Each question is multiple-choice with a <b>30-second timer</b>. No answer when time runs out just scores zero — nothing is deducted.</li>
+        <li>Every correct answer earns <b>10 points</b> — <b>250 points</b> on the table, no negative marking anywhere.</li>
+        <li>At the end, your <b>scorecard</b> shows your score and a grade with a comment on your CLRM command.</li>
+        <li>Tap <b>Review Answers</b> afterward to see which questions you got right or wrong, plus the model answer and reasoning for every question.</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <label class="field-label">Enter your name for the dashboard</label>
+      <input type="text" class="name-input" id="playerName" placeholder="e.g. Avike Paul" maxlength="40">
+      <div class="error-msg" id="nameError"></div>
+      <div class="btn-row">
+        <button class="btn" id="startBtn">Start the Quiz →</button>
+      </div>
+    </div>
+
+    <div class="footer-credit">AVIKE PAUL · ECO + GENAI</div>
+  </div>
+
+  <!-- ================= SCREEN 2: QUIZ ================= -->
+  <div id="screen-quiz" class="hidden">
+    <div class="quiz-topbar">
+      <div class="stat">PLAYER · <span id="quizPlayerName">—</span></div>
+      <div class="stat">SCORE · <span id="quizScore">0</span> / 250</div>
+      <div class="timer-wrap">
+        <div class="timer-ring">
+          <svg width="46" height="46" viewBox="0 0 46 46">
+            <circle class="bg" cx="23" cy="23" r="19"></circle>
+            <circle class="fg" id="timerCircle" cx="23" cy="23" r="19" stroke-dasharray="119.4" stroke-dashoffset="0"></circle>
+          </svg>
+          <div class="timer-num" id="timerNum">30</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="q-progress-bar"><div class="q-progress-fill" id="progressFill"></div></div>
+
+    <div class="question-card">
+      <div class="q-number">
+        QUESTION <span id="qIndex">1</span> / 25 &nbsp;·&nbsp;
+        <span class="diff-tag" id="diffTag">EASY</span>
+      </div>
+      <p class="q-text" id="qText"></p>
+      <div class="options" id="optionsWrap"></div>
+      <div class="feedback-line" id="feedbackLine"></div>
+      <div class="btn-row" style="margin-top:22px;">
+        <button class="btn" id="nextBtn" disabled>Next Question →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SCREEN 3: SCORECARD ================= -->
+  <div id="screen-score" class="hidden">
+    <div class="eyebrow">Scorecard</div>
+    <h1 class="title">Results are in.</h1>
+    <div class="score-hero">
+      <div class="player-tag" id="scorePlayerName">—</div>
+      <div class="score-num" id="finalScore">0</div>
+      <div class="score-out-of">out of 250 points</div>
+      <div class="grade-badge" id="gradeBadge">GRADE</div>
+      <p class="grade-comment" id="gradeComment"></p>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-box"><div class="n" id="statCorrect">0</div><div class="l">Correct</div></div>
+      <div class="stat-box"><div class="n" id="statWrong">0</div><div class="l">Wrong / Skipped</div></div>
+      <div class="stat-box"><div class="n">25</div><div class="l">Total Questions</div></div>
+      <div class="stat-box"><div class="n">+10</div><div class="l">Pts / Correct</div></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="reviewBtn">Review Answers →</button>
+      <button class="btn secondary" id="restartBtn">Play Again</button>
+    </div>
+
+    <div class="footer-credit">AVIKE PAUL · ECO + GENAI</div>
+  </div>
+
+  <!-- ================= SCREEN 4: REVIEW ================= -->
+  <div id="screen-review" class="hidden">
+    <div class="eyebrow">Model Answers &amp; Reasoning</div>
+    <h1 class="title">Check your work.</h1>
+    <p class="subtitle">Every question below shows your answer, the model answer, and the reasoning behind it.</p>
+    <div id="reviewList"></div>
+    <div class="btn-row">
+      <button class="btn secondary" id="backToScoreBtn">← Back to Scorecard</button>
+      <button class="btn" id="restartBtn2">Play Again</button>
+    </div>
+    <div class="footer-credit">AVIKE PAUL · ECO + GENAI</div>
+  </div>
+
+</div>
+
+<script>
+/* ============ WATERMARK ============ */
+(function(){
+  const layer = document.getElementById('watermarkLayer');
+  const text = "AVIKE PAUL · ECO+GENAI ";
+  let html = '';
+  for(let i=0;i<140;i++){ html += `<span>${text}</span>`; }
+  layer.innerHTML = html;
+})();
+
+/* ============ HERO SVG (scatter + regression line) ============ */
+(function(){
+  const svg = document.getElementById('heroSvg');
+  const pts = [];
+  for(let i=0;i<26;i++){
+    const x = 30 + i*25 + (Math.random()*10-5);
+    const trend = 190 - (x*0.62);
+    const y = Math.max(20, Math.min(200, trend + (Math.random()*46-23)));
+    pts.push([x,y]);
+  }
+  let dotsHtml = '';
+  pts.forEach((p,i)=>{
+    dotsHtml += `<circle class="dot" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.2" style="animation-delay:${(i*0.04).toFixed(2)}s"></circle>`;
+  });
+  const lineHtml = `<line class="reg-line" x1="20" y1="185" x2="680" y2="35"></line>`;
+  svg.innerHTML = `
+    <line x1="20" y1="200" x2="680" y2="200" stroke="rgba(32,41,61,0.15)" stroke-width="1"/>
+    <line x1="20" y1="10" x2="20" y2="200" stroke="rgba(32,41,61,0.15)" stroke-width="1"/>
+    ${dotsHtml}
+    ${lineHtml}
+  `;
+})();
+
+/* ============ QUESTION BANK ============ */
+const QUESTIONS = [
+{difficulty:"easy", q:"What does CLRM stand for in econometrics?",
+ options:["Classical Linear Regression Model","Combined Linear Regression Method","Conditional Least Regression Model","Categorical Linear Regression Model"],
+ correct:0,
+ reasoning:"CLRM stands for the Classical Linear Regression Model — the foundational OLS-based framework built on a specific set of assumptions about the error term and regressors."},
+
+{difficulty:"easy", q:"In the model Y = β0 + β1X + u, what is X called?",
+ options:["Dependent variable","Independent (explanatory) variable","Residual","Intercept"],
+ correct:1,
+ reasoning:"X is the independent or explanatory variable — the variable assumed to influence Y. Y is the dependent variable, and u is the error term."},
+
+{difficulty:"easy", q:"What is Y also commonly referred to as in a regression equation?",
+ options:["Regressor","Explanatory variable","Regressand (dependent variable)","Disturbance term"],
+ correct:2,
+ reasoning:"Y is called the regressand or dependent variable — the outcome the model tries to explain using the regressor(s), X."},
+
+{difficulty:"easy", q:"Which method is the standard technique for estimating parameters in the CLRM?",
+ options:["Maximum Likelihood only","Ordinary Least Squares (OLS)","Instrumental Variables only","Generalized Method of Moments only"],
+ correct:1,
+ reasoning:"OLS is the default estimation method in CLRM. It estimates β0 and β1 by minimizing the sum of squared residuals between actual and fitted values."},
+
+{difficulty:"easy", q:"OLS estimates coefficients by minimizing the sum of squared ______.",
+ options:["Coefficients","Residuals","Independent variables","Intercepts"],
+ correct:1,
+ reasoning:"OLS chooses the coefficient values that minimize the sum of squared residuals (the vertical distances between actual and predicted Y values)."},
+
+{difficulty:"easy", q:"CLRM assumes that the conditional mean of the error term, given X, is:",
+ options:["Equal to 1","Equal to the variance of Y","Zero — E(u|X) = 0","Equal to Y itself"],
+ correct:2,
+ reasoning:"The zero conditional mean assumption, E(u|X) = 0, ensures the error term carries no systematic information related to X, which is what makes OLS unbiased."},
+
+{difficulty:"medium", q:"The homoscedasticity assumption states that the variance of the error term is:",
+ options:["Increasing with X","Constant across all observations","Always zero","Equal to the mean of Y"],
+ correct:1,
+ reasoning:"Homoscedasticity means Var(u|X) is constant across observations — the spread of errors doesn't change with the level of X."},
+
+{difficulty:"medium", q:"Multicollinearity in a regression model refers to:",
+ options:["Correlation between successive error terms","High correlation among two or more independent variables","A non-zero mean of the error term","Non-normally distributed residuals"],
+ correct:1,
+ reasoning:"Multicollinearity occurs when independent variables are highly correlated with each other, making it hard to isolate each variable's individual effect on Y."},
+
+{difficulty:"medium", q:"When error terms are correlated across observations, which CLRM assumption is violated?",
+ options:["Homoscedasticity","No autocorrelation","Linearity in parameters","Zero conditional mean"],
+ correct:1,
+ reasoning:"This violates the no-autocorrelation assumption, which requires error terms to be uncorrelated with each other across observations (common in time-series data)."},
+
+{difficulty:"medium", q:"According to the Gauss-Markov theorem, OLS is BLUE. What does BLUE stand for?",
+ options:["Best Linear Unbiased Estimator","Basic Least Unbiased Equation","Bounded Linear Unbiased Error","Best Logical Unbiased Estimate"],
+ correct:0,
+ reasoning:"BLUE = Best Linear Unbiased Estimator. Under the CLRM assumptions, OLS has the smallest variance among all linear unbiased estimators."},
+
+{difficulty:"medium", q:"What does R-squared (R²) measure in a regression model?",
+ options:["The correlation between residuals","The proportion of variance in Y explained by X","The statistical significance of coefficients","The variance of the error term"],
+ correct:1,
+ reasoning:"R² measures the proportion of the total variation in the dependent variable that is explained by the independent variable(s) in the model."},
+
+{difficulty:"medium", q:"CLRM assumes the error term is independent of:",
+ options:["The dependent variable only","The regressors (independent variables)","The sample size","The intercept term"],
+ correct:1,
+ reasoning:"The error term must be uncorrelated with (independent of) the regressors; otherwise the OLS estimator becomes biased and inconsistent (endogeneity)."},
+
+{difficulty:"medium", q:"Which test is used to check the overall significance of a regression model?",
+ options:["t-test","F-test","Durbin-Watson test","Jarque-Bera test only"],
+ correct:1,
+ reasoning:"The F-test checks the joint/overall significance of all explanatory variables in the model, testing whether the model as a whole explains variation in Y."},
+
+{difficulty:"medium", q:"Which test checks the individual statistical significance of a single coefficient?",
+ options:["F-test","t-test","Durbin-Watson test","Breusch-Pagan test"],
+ correct:1,
+ reasoning:"The t-test evaluates whether an individual coefficient is statistically different from zero, holding other variables constant."},
+
+{difficulty:"medium", q:"Heteroscedasticity primarily affects which property of the OLS estimator?",
+ options:["Unbiasedness","Efficiency — it remains unbiased but is no longer BLUE","Linearity of the model","Existence of the estimator"],
+ correct:1,
+ reasoning:"OLS remains unbiased under heteroscedasticity, but it loses efficiency — it is no longer the minimum-variance estimator, and standard errors become unreliable."},
+
+{difficulty:"medium", q:"Perfect multicollinearity means:",
+ options:["Independent variables are completely uncorrelated","One regressor is an exact linear combination of one or more other regressors","The error term is correlated with a regressor","R-squared always equals zero"],
+ correct:1,
+ reasoning:"Perfect multicollinearity occurs when a regressor can be written as an exact linear function of other regressors, making OLS estimation mathematically impossible."},
+
+{difficulty:"hard", q:"The Durbin-Watson test is primarily used to detect:",
+ options:["Heteroscedasticity","Autocorrelation","Multicollinearity","Non-normality of residuals"],
+ correct:1,
+ reasoning:"The Durbin-Watson statistic tests for first-order autocorrelation in the residuals, common in time-series regressions."},
+
+{difficulty:"hard", q:"The Breusch-Pagan test is used to detect:",
+ options:["Autocorrelation","Heteroscedasticity","Multicollinearity","Omitted variable bias"],
+ correct:1,
+ reasoning:"The Breusch-Pagan test checks whether the variance of the residuals depends on the independent variables — i.e., whether heteroscedasticity is present."},
+
+{difficulty:"hard", q:"If E(u|X) ≠ 0, this violation is referred to as:",
+ options:["Homoscedasticity","Endogeneity","Efficiency loss","Normality violation"],
+ correct:1,
+ reasoning:"When the error term is correlated with the regressor, E(u|X) ≠ 0, this is called endogeneity — it causes OLS estimates to be biased and inconsistent."},
+
+{difficulty:"hard", q:"Omitted variable bias occurs when:",
+ options:["A relevant variable correlated with an included regressor is left out of the model","Too many control variables are included","The sample size is too small","The error term happens to be normally distributed"],
+ correct:0,
+ reasoning:"Leaving out a relevant variable that is correlated with an included regressor causes the omitted variable's effect to be wrongly attributed to the included regressor, biasing its coefficient."},
+
+{difficulty:"hard", q:"Under the CLRM assumptions, why are OLS estimators normally distributed?",
+ options:["Because the sample size is always large","Because the error term is assumed to be normally distributed","Because R-squared is high","Because all regressors are dummy variables"],
+ correct:1,
+ reasoning:"CLRM's normality assumption states the error term u is normally distributed; since OLS estimators are linear functions of u, they inherit a normal distribution."},
+
+{difficulty:"hard", q:"The 'dummy variable trap' occurs when:",
+ options:["Too few category dummies are included in the model","All category dummies for a variable are included along with an intercept, causing perfect multicollinearity","Dummy variables are treated as continuous","Dummy coefficients turn out negative"],
+ correct:1,
+ reasoning:"Including a dummy for every category plus an intercept creates perfect multicollinearity, since the dummies sum to 1 (the intercept column) for every observation — one category must be dropped as the base group."},
+
+{difficulty:"hard", q:"If heteroscedasticity is present but OLS is used anyway without correction, the standard errors become:",
+ options:["More efficient than before","Biased/incorrect, making the usual t-tests and F-tests unreliable","Exactly zero","Always larger than the true values"],
+ correct:1,
+ reasoning:"Heteroscedasticity biases the estimated standard errors, so conventional t- and F-tests based on them become invalid — robust standard errors are typically used to correct this."},
+
+{difficulty:"hard", q:"Which CLRM assumption ensures there is no perfect collinearity among the regressors?",
+ options:["Zero conditional mean assumption","The no perfect multicollinearity assumption","Homoscedasticity assumption","Normality of the error term assumption"],
+ correct:1,
+ reasoning:"The no perfect multicollinearity assumption requires that no independent variable is an exact linear combination of the others, ensuring OLS coefficients can be uniquely estimated."},
+
+{difficulty:"hard", q:"In the presence of autocorrelation, OLS estimators remain:",
+ options:["Unbiased, but no longer efficient (not BLUE)","Biased and inconsistent","Always BLUE regardless of autocorrelation","Undefined and cannot be computed"],
+ correct:0,
+ reasoning:"Autocorrelation does not bias OLS coefficient estimates, but it makes them inefficient (no longer minimum variance) and distorts standard errors, similar to heteroscedasticity."}
+];
+
+/* ============ STATE ============ */
+let playerName = "";
+let currentIndex = 0;
+let score = 0;
+let answers = []; // {selected, isCorrect, timedOut}
+let timerInterval = null;
+let timeLeft = 30;
+const TOTAL_TIME = 30;
+const CIRC = 2 * Math.PI * 19; // ~119.38
+
+/* ============ NAV HELPERS ============ */
+function showScreen(id){
+  ['screen-landing','screen-quiz','screen-score','screen-review'].forEach(s=>{
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ============ LANDING ============ */
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  const val = document.getElementById('playerName').value.trim();
+  if(!val){
+    document.getElementById('nameError').textContent = "Please enter your name to start the quiz.";
+    return;
+  }
+  playerName = val;
+  document.getElementById('nameError').textContent = "";
+  currentIndex = 0;
+  score = 0;
+  answers = [];
+  document.getElementById('quizPlayerName').textContent = playerName;
+  showScreen('screen-quiz');
+  loadQuestion();
+});
+
+/* ============ QUIZ LOGIC ============ */
+function loadQuestion(){
+  const item = QUESTIONS[currentIndex];
+  document.getElementById('qIndex').textContent = currentIndex + 1;
+  document.getElementById('qText').textContent = item.q;
+  document.getElementById('quizScore').textContent = score;
+
+  const tag = document.getElementById('diffTag');
+  tag.textContent = item.difficulty.toUpperCase();
+  tag.className = 'diff-tag diff-' + item.difficulty;
+
+  document.getElementById('progressFill').style.width = ((currentIndex)/25*100) + '%';
+
+  const wrap = document.getElementById('optionsWrap');
+  wrap.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  item.options.forEach((opt, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.addEventListener('click', ()=>selectAnswer(i));
+    wrap.appendChild(btn);
+  });
+
+  document.getElementById('feedbackLine').textContent = '';
+  document.getElementById('feedbackLine').className = 'feedback-line';
+  document.getElementById('nextBtn').disabled = true;
+
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timeLeft = TOTAL_TIME;
+  updateTimerUI();
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    updateTimerUI();
+    if(timeLeft <= 0){
+      clearInterval(timerInterval);
+      lockAnswer(-1, true); // timed out
+    }
+  }, 1000);
+}
+
+function updateTimerUI(){
+  document.getElementById('timerNum').textContent = timeLeft;
+  const circle = document.getElementById('timerCircle');
+  const offset = CIRC * (1 - timeLeft/TOTAL_TIME);
+  circle.style.strokeDasharray = CIRC;
+  circle.style.strokeDashoffset = offset;
+  circle.style.stroke = timeLeft <= 8 ? getComputedStyle(document.documentElement).getPropertyValue('--line-red') : getComputedStyle(document.documentElement).getPropertyValue('--teal');
+}
+
+function selectAnswer(i){
+  clearInterval(timerInterval);
+  lockAnswer(i, false);
+}
+
+function lockAnswer(selectedIndex, timedOut){
+  const item = QUESTIONS[currentIndex];
+  const isCorrect = selectedIndex === item.correct;
+  if(isCorrect) score += 10;
+
+  answers.push({selected: selectedIndex, isCorrect: isCorrect, timedOut: timedOut});
+
+  const opts = document.querySelectorAll('#optionsWrap .option');
+  opts.forEach((btn, i)=>{
+    btn.classList.add('locked');
+    btn.disabled = true;
+    if(i === item.correct) btn.classList.add('correct');
+    if(i === selectedIndex && i !== item.correct) btn.classList.add('wrong');
+    if(i === selectedIndex && i === item.correct) btn.classList.add('selected');
+  });
+
+  const fb = document.getElementById('feedbackLine');
+  if(timedOut){
+    fb.textContent = "⏱ Time's up — no marks awarded, nothing deducted.";
+    fb.classList.add('no');
+  } else if(isCorrect){
+    fb.textContent = "✓ Correct! +10 points.";
+    fb.classList.add('ok');
+  } else {
+    fb.textContent = "✗ Not quite — no points deducted, see the review at the end.";
+    fb.classList.add('no');
+  }
+
+  document.getElementById('quizScore').textContent = score;
+  document.getElementById('nextBtn').disabled = false;
+}
+
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  currentIndex++;
+  if(currentIndex >= QUESTIONS.length){
+    finishQuiz();
+  } else {
+    loadQuestion();
+  }
+});
+
+/* ============ SCORECARD ============ */
+function gradeFor(score){
+  if(score >= 230) return {grade:"A+", comment:"Outstanding! You've mastered the CLRM assumptions, estimation logic, and diagnostic tests inside out."};
+  if(score >= 200) return {grade:"A", comment:"Excellent work — a strong, near-complete command of classical regression theory."};
+  if(score >= 170) return {grade:"B", comment:"Very good! Your grasp of CLRM fundamentals is solid, with just a few gaps to polish."};
+  if(score >= 140) return {grade:"C", comment:"Good effort — you know the basics well; revisit diagnostics like heteroscedasticity and autocorrelation."};
+  if(score >= 100) return {grade:"D", comment:"Fair attempt. Revising the core CLRM assumptions and OLS properties will help a lot."};
+  return {grade:"F", comment:"Needs improvement — start with the basic assumptions of CLRM and build up from there. Review and try again!"};
+}
+
+function finishQuiz(){
+  document.getElementById('scorePlayerName').textContent = playerName;
+  document.getElementById('finalScore').textContent = score;
+
+  const correctCount = answers.filter(a=>a.isCorrect).length;
+  const wrongCount = answers.length - correctCount;
+  document.getElementById('statCorrect').textContent = correctCount;
+  document.getElementById('statWrong').textContent = wrongCount;
+
+  const g = gradeFor(score);
+  document.getElementById('gradeBadge').textContent = "GRADE " + g.grade;
+  document.getElementById('gradeComment').textContent = g.comment;
+
+  showScreen('screen-score');
+}
+
+/* ============ REVIEW ============ */
+function buildReview(){
+  const list = document.getElementById('reviewList');
+  list.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  QUESTIONS.forEach((item, idx)=>{
+    const ans = answers[idx] || {selected:-1, isCorrect:false, timedOut:true};
+    const div = document.createElement('div');
+    div.className = 'review-item';
+
+    const yourAnswerText = ans.selected === -1
+      ? (ans.timedOut ? "No answer (time expired)" : "No answer")
+      : letters[ans.selected] + ". " + item.options[ans.selected];
+
+    div.innerHTML = `
+      <div class="review-head">
+        <p class="review-q">${idx+1}. ${item.q}</p>
+        <span class="badge ${ans.isCorrect ? 'correct' : 'wrong'}">${ans.isCorrect ? 'CORRECT' : 'WRONG'}</span>
+      </div>
+      <div class="review-row"><b>Your answer:</b> ${yourAnswerText}</div>
+      <div class="review-row"><b>Model answer:</b> ${letters[item.correct]}. ${item.options[item.correct]}</div>
+      <div class="reasoning-box"><b>REASONING —</b> ${item.reasoning}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+document.getElementById('reviewBtn').addEventListener('click', ()=>{
+  buildReview();
+  showScreen('screen-review');
+});
+document.getElementById('backToScoreBtn').addEventListener('click', ()=> showScreen('screen-score'));
+
+/* ============ RESTART ============ */
+function restart(){
+  document.getElementById('playerName').value = playerName;
+  document.getElementById('nameError').textContent = '';
+  showScreen('screen-landing');
+}
+document.getElementById('restartBtn').addEventListener('click', restart);
+document.getElementById('restartBtn2').addEventListener('click', restart);
+</script>
+</body>
+</html>

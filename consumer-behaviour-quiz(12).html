@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equilibrium — A Consumer Behaviour Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12213A;
+    --ink-soft:#2A3B58;
+    --parchment:#F1EAD9;
+    --parchment-dim:#E6DCC6;
+    --gold:#C89B3C;
+    --gold-soft:#E4C878;
+    --green:#3F7D5C;
+    --green-soft:#DCEAE0;
+    --clay:#B4483B;
+    --clay-soft:#F3DEDA;
+    --grid:#8A96A8;
+    --shadow: 0 20px 50px -20px rgba(18,33,58,0.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--parchment);
+    font-family:'IBM Plex Sans',sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+    background-image:
+      linear-gradient(var(--parchment-dim) 1px, transparent 1px),
+      linear-gradient(90deg, var(--parchment-dim) 1px, transparent 1px);
+    background-size: 36px 36px;
+  }
+  /* ---- watermark ---- */
+  #watermark{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    opacity:0.09;
+    overflow:hidden;
+  }
+  #watermark .row{
+    display:flex;
+    white-space:nowrap;
+    transform:rotate(-28deg);
+    position:absolute;
+    left:-20%;
+    width:140%;
+  }
+  #watermark .row span{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:2px;
+    color:var(--ink);
+    margin-right:60px;
+  }
+  .app{
+    position:relative;
+    z-index:1;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:32px 16px 64px;
+  }
+  .brandbar{
+    width:100%;
+    max-width:920px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:28px;
+  }
+  .brandbar .dot{color:var(--gold);}
+  h1,h2,h3{font-family:'Fraunces',serif;margin:0;}
+  .screen{width:100%;max-width:920px;}
+  /* ---- START SCREEN ---- */
+  .hero{
+    background:var(--ink);
+    color:var(--parchment);
+    border-radius:22px;
+    padding:52px 44px;
+    box-shadow:var(--shadow);
+    position:relative;
+    overflow:hidden;
+  }
+  .hero .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--gold-soft);
+    margin-bottom:14px;
+  }
+  .hero h1{
+    font-size:44px;
+    font-weight:600;
+    line-height:1.08;
+    max-width:560px;
+  }
+  .hero h1 em{color:var(--gold-soft);font-style:italic;}
+  .hero p.lede{
+    font-size:16px;
+    line-height:1.6;
+    color:#CBD3E0;
+    max-width:480px;
+    margin-top:18px;
+  }
+  .hero-graph{
+    position:absolute;
+    right:-10px;
+    top:0;
+    bottom:0;
+    width:340px;
+    opacity:0.95;
+  }
+  .stat-row{
+    display:flex;
+    gap:28px;
+    margin-top:34px;
+    flex-wrap:wrap;
+  }
+  .stat{
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .stat .num{font-size:22px;color:var(--gold-soft);font-weight:600;}
+  .stat .lbl{font-size:11px;color:#9FADC2;letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+  .btn{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    border:none;
+    border-radius:10px;
+    padding:15px 28px;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn:focus-visible{outline:3px solid var(--gold); outline-offset:2px;}
+  .btn-primary{
+    background:var(--gold);
+    color:var(--ink);
+    box-shadow:0 10px 24px -8px rgba(200,155,60,0.6);
+  }
+  .btn-ghost{
+    background:transparent;
+    color:var(--parchment);
+    border:1.5px solid rgba(241,234,217,0.35);
+  }
+  .btn-dark{
+    background:var(--ink);
+    color:var(--parchment);
+  }
+  .cta-row{margin-top:36px;display:flex;gap:14px;flex-wrap:wrap;}
+  /* ---- QUIZ SCREEN ---- */
+  .quiz-topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .progress-track{
+    width:100%;
+    height:6px;
+    background:var(--parchment-dim);
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:26px;
+  }
+  .progress-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--gold), var(--green));
+    border-radius:4px;
+    transition:width .35s ease;
+  }
+  .qcard{
+    background:#fff;
+    border-radius:18px;
+    padding:38px 36px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--parchment-dim);
+  }
+  .diff-badge{
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    padding:4px 10px;
+    border-radius:20px;
+    margin-bottom:16px;
+    font-weight:600;
+  }
+  .diff-easy{background:var(--green-soft);color:var(--green);}
+  .diff-medium{background:#F5E7C6;color:#8A6416;}
+  .diff-hard{background:var(--clay-soft);color:var(--clay);}
+  .qcard h2{font-size:24px;line-height:1.4;font-weight:500;max-width:680px;}
+  .options{margin-top:26px;display:flex;flex-direction:column;gap:12px;}
+  .option{
+    text-align:left;
+    background:var(--parchment);
+    border:1.5px solid var(--parchment-dim);
+    border-radius:12px;
+    padding:15px 18px;
+    font-size:15px;
+    color:var(--ink);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .option:hover{border-color:var(--gold);}
+  .option .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--parchment-dim);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .option.correct{background:var(--green-soft);border-color:var(--green);}
+  .option.correct .tag{background:var(--green);color:#fff;}
+  .option.wrong{background:var(--clay-soft);border-color:var(--clay);}
+  .option.wrong .tag{background:var(--clay);color:#fff;}
+  .option:disabled{cursor:default;}
+  .timer-wrap{
+    display:flex;align-items:center;gap:8px;
+  }
+  .timer-bar{
+    width:110px;height:6px;background:var(--parchment-dim);border-radius:4px;overflow:hidden;
+  }
+  .timer-fill{height:100%;background:var(--clay);width:100%;transition:width 1s linear;}
+  .next-row{margin-top:26px;display:flex;justify-content:flex-end;}
+  .reason-box{
+    margin-top:22px;
+    background:var(--parchment);
+    border-left:4px solid var(--gold);
+    border-radius:8px;
+    padding:16px 18px;
+    font-size:14px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    display:none;
+  }
+  /* ---- RESULTS ---- */
+  .results-card{
+    background:var(--ink);
+    color:var(--parchment);
+    border-radius:22px;
+    padding:52px 44px;
+    text-align:center;
+    box-shadow:var(--shadow);
+  }
+  .results-card .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:3px;
+    text-transform:uppercase;color:var(--gold-soft);
+  }
+  .score-big{
+    font-family:'Fraunces',serif;
+    font-size:78px;
+    font-weight:600;
+    margin:10px 0 0;
+    color:var(--gold-soft);
+  }
+  .score-sub{font-family:'IBM Plex Mono',monospace;font-size:14px;color:#B9C2D4;margin-top:6px;}
+  .grade-pill{
+    display:inline-block;margin-top:20px;padding:8px 20px;border-radius:30px;
+    background:rgba(241,234,217,0.1); font-family:'IBM Plex Mono',monospace;
+    font-size:13px; letter-spacing:1px;
+  }
+  .breakdown{
+    display:flex;justify-content:center;gap:40px;margin-top:34px;flex-wrap:wrap;
+  }
+  .breakdown .b-num{font-size:28px;font-family:'Fraunces',serif;}
+  .breakdown .b-lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#9FADC2;margin-top:2px;}
+  .b-correct .b-num{color:var(--green-soft);}
+  .b-wrong .b-num{color:#E79286;}
+  /* ---- REVIEW ---- */
+  .review-item{
+    background:#fff;border:1px solid var(--parchment-dim);border-radius:14px;
+    padding:22px 24px;margin-bottom:16px;
+  }
+  .review-item .rq{font-weight:600;font-size:15px;margin-bottom:10px;}
+  .review-row{font-size:14px;margin-bottom:6px;display:flex;gap:8px;}
+  .review-row .lab{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--ink-soft);min-width:90px;flex-shrink:0;padding-top:2px;}
+  .pill-correct{color:var(--green);font-weight:600;}
+  .pill-wrong{color:var(--clay);font-weight:600;}
+  .review-reason{
+    margin-top:10px;background:var(--parchment);border-radius:8px;padding:12px 14px;font-size:13.5px;line-height:1.6;color:var(--ink-soft);
+  }
+  .review-header{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px;
+  }
+  footer.credit{
+    margin-top:40px;text-align:center;font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:1px;color:var(--ink-soft);opacity:0.7;
+  }
+  /* ---- WELCOME INSTRUCTIONS + NAME FIELD (inside hero) ---- */
+  .instructions-block{
+    margin-top:30px;
+    background:rgba(241,234,217,0.06);
+    border:1px solid rgba(241,234,217,0.18);
+    border-radius:14px;
+    padding:20px 22px;
+    max-width:480px;
+  }
+  .instructions-title{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--gold-soft);margin-bottom:12px;
+  }
+  .instructions-list{
+    margin:0;padding-left:20px;
+    font-size:14px;line-height:1.7;color:#CBD3E0;
+  }
+  .instructions-list li{margin-bottom:4px;}
+  .name-field{
+    margin-top:26px;max-width:360px;
+  }
+  .name-field label{
+    display:block;font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--gold-soft);margin-bottom:8px;
+  }
+  .name-field input{
+    width:100%;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:15px;
+    padding:13px 16px;
+    border-radius:10px;
+    border:1.5px solid rgba(241,234,217,0.35);
+    background:rgba(241,234,217,0.08);
+    color:var(--parchment);
+    outline:none;
+  }
+  .name-field input::placeholder{color:#8592AC;}
+  .name-field input:focus{border-color:var(--gold);}
+  .name-error{
+    margin-top:8px;font-size:13px;color:#E79286;
+    font-family:'IBM Plex Sans',sans-serif;
+  }
+  /* ---- ADMIN DASHBOARD ---- */
+  .admin-card{
+    background:var(--ink);
+    color:var(--parchment);
+    border-radius:22px;
+    padding:48px 44px;
+    box-shadow:var(--shadow);
+  }
+  .admin-count-row{
+    margin-top:22px;display:flex;align-items:baseline;gap:16px;
+  }
+  .admin-count-num{
+    font-family:'Fraunces',serif;font-size:64px;font-weight:600;color:var(--gold-soft);
+  }
+  .admin-count-lbl{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:1.5px;
+    text-transform:uppercase;color:#9FADC2;
+  }
+  .admin-list{margin-top:32px;display:flex;flex-direction:column;gap:10px;max-height:520px;overflow-y:auto;}
+  .admin-row{
+    display:flex;justify-content:space-between;align-items:center;gap:14px;
+    background:rgba(241,234,217,0.06);
+    border:1px solid rgba(241,234,217,0.14);
+    border-radius:10px;padding:12px 16px;
+    font-size:13.5px;flex-wrap:wrap;
+  }
+  .admin-row .a-name{font-weight:600;color:var(--parchment);}
+  .admin-row .a-meta{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9FADC2;}
+  .admin-empty{margin-top:24px;color:#9FADC2;font-size:14px;}
+  @media (max-width:640px){
+    .hero{padding:36px 24px;}
+    .hero h1{font-size:32px;}
+    .hero-graph{display:none;}
+    .qcard{padding:26px 22px;}
+    .results-card{padding:38px 24px;}
+    .score-big{font-size:56px;}
+  }
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div id="watermark"></div>
+
+<div class="app">
+  <div class="brandbar">
+    <span>Equilibrium <span class="dot">·</span> Theory of Consumer Behaviour</span>
+    <span id="topbar-status">25+ Questions</span>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="screen" id="screen-start">
+    <div class="hero">
+      <svg class="hero-graph" viewBox="0 0 340 400" xmlns="http://www.w3.org/2000/svg">
+        <line x1="30" y1="20" x2="30" y2="370" stroke="#3E4E6E" stroke-width="1.5"/>
+        <line x1="30" y1="370" x2="320" y2="370" stroke="#3E4E6E" stroke-width="1.5"/>
+        <path d="M 60 340 Q 130 180 300 90" fill="none" stroke="#4A5C82" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <path d="M 80 300 Q 140 150 290 130" fill="none" stroke="#C89B3C" stroke-width="2.5"/>
+        <path d="M 100 280 Q 160 140 310 160" fill="none" stroke="#E4C878" stroke-width="1.5" opacity="0.5"/>
+        <line x1="35" y1="130" x2="300" y2="330" stroke="#3F7D5C" stroke-width="2.5" id="budgetline"/>
+        <circle cx="188" cy="167" r="6" fill="#C89B3C" id="eqpoint"/>
+        <text x="180" y="150" fill="#E4C878" font-family="IBM Plex Mono, monospace" font-size="11">E</text>
+      </svg>
+      <div class="eyebrow">A Microeconomics Puzzle</div>
+      <h1>Find your point of <em>consumer equilibrium.</em></h1>
+      <p class="lede">27 questions on utility, indifference curves, budget constraints and consumer choice — ordered from easy to hard. Answer fast, reason well, and see the model logic behind every correct answer.</p>
+      <div class="stat-row">
+        <div class="stat"><div class="num">27</div><div class="lbl">Questions</div></div>
+        <div class="stat"><div class="num">15–30s</div><div class="lbl">Per Question</div></div>
+        <div class="stat"><div class="num">Instant</div><div class="lbl">Reasoned Review</div></div>
+      </div>
+      <div class="instructions-block">
+        <div class="instructions-title">Before you begin</div>
+        <ul class="instructions-list">
+          <li>10 points for each correct answer</li>
+          <li>No negative marking — wrong or skipped answers cost you nothing</li>
+          <li>Each question carries its own time limit, so answer before the timer runs out</li>
+        </ul>
+      </div>
+
+      <div class="name-field">
+        <label for="participant-name">Your name</label>
+        <input type="text" id="participant-name" placeholder="Enter your name to begin" autocomplete="off">
+        <div class="name-error hidden" id="name-error">Please enter your name to start the quiz.</div>
+      </div>
+
+      <div class="cta-row">
+        <button class="btn btn-primary" onclick="beginQuiz()">Start the quiz →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="screen hidden" id="screen-quiz">
+    <div class="quiz-topbar">
+      <span id="qcounter">Question 1 / 27</span>
+      <div class="timer-wrap">
+        <span id="timer-num">20s</span>
+        <div class="timer-bar"><div class="timer-fill" id="timer-fill"></div></div>
+      </div>
+      <span id="scoretally">Score: 0</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="qcard">
+      <span class="diff-badge" id="diff-badge">Easy</span>
+      <h2 id="qtext">Question text</h2>
+      <div class="options" id="options"></div>
+      <div class="reason-box" id="reason-box"></div>
+      <div class="next-row">
+        <button class="btn btn-dark hidden" id="next-btn" onclick="nextQuestion()">Next question →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div class="screen hidden" id="screen-results">
+    <div class="results-card">
+      <div class="eyebrow">Quiz complete</div>
+      <div class="score-big" id="final-score">0</div>
+      <div class="score-sub" id="final-sub">out of 0 points</div>
+      <div class="grade-pill" id="grade-pill">Grade: —</div>
+      <div class="breakdown">
+        <div class="b-correct"><div class="b-num" id="b-correct">0</div><div class="b-lbl">Correct</div></div>
+        <div class="b-wrong"><div class="b-num" id="b-wrong">0</div><div class="b-lbl">Wrong</div></div>
+      </div>
+      <div class="cta-row" style="justify-content:center;">
+        <button class="btn btn-primary" onclick="showReview()">Review my answers</button>
+        <button class="btn btn-ghost" onclick="restartQuiz()">Play again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEW SCREEN -->
+  <div class="screen hidden" id="screen-review">
+    <div class="review-header">
+      <h2 style="font-size:26px;">Answer review</h2>
+      <button class="btn btn-dark" onclick="backToResults()">← Back to score</button>
+    </div>
+    <div id="review-list"></div>
+    <div class="cta-row">
+      <button class="btn btn-primary" onclick="restartQuiz()">Play again</button>
+    </div>
+  </div>
+
+  <!-- ADMIN SCREEN (hidden — only reachable via ?admin=true in the URL) -->
+  <div class="screen hidden" id="screen-admin">
+    <div class="admin-card">
+      <div class="eyebrow">Admin Dashboard</div>
+      <h1 style="font-size:32px;">Participant tracker</h1>
+      <div class="admin-count-row">
+        <div class="admin-count-num" id="admin-count">0</div>
+        <div class="admin-count-lbl">Total participants</div>
+      </div>
+      <div class="admin-list" id="admin-list"></div>
+    </div>
+  </div>
+
+  <footer class="credit">Avike Paul · ECO+GenAI — an interactive economics quiz</footer>
+</div>
+
+<script>
+/* ---------------- Watermark generation ---------------- */
+(function buildWatermark(){
+  const wm = document.getElementById('watermark');
+  const text = "AVIKE PAUL · ECO+GENAI  ";
+  const rowCount = 16;
+  for(let i=0;i<rowCount;i++){
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.style.top = (i*70-140)+'px';
+    let content = '';
+    for(let j=0;j<10;j++){ content += `<span>${text}</span>`; }
+    row.innerHTML = content;
+    wm.appendChild(row);
+  }
+})();
+
+/* ---------------- Question bank ---------------- */
+const QUESTIONS = [
+{d:'easy', q:"In economics, 'utility' refers to:", o:["The market price of a good","The satisfaction a consumer derives from consuming a good","The cost of producing a good","The number of units sold"], a:1, r:"Utility is defined as the want-satisfying power of a commodity — the psychological satisfaction a consumer gets from consumption. It is subjective and varies from person to person."},
+{d:'easy', q:"Which of these best describes 'Marginal Utility' (MU)?", o:["The utility from the very first unit consumed","The total satisfaction from all units consumed","The additional utility gained from consuming one more unit of a good","The average utility per unit consumed"], a:2, r:"Marginal Utility is the change in Total Utility resulting from consuming one additional unit: MUn = TUn − TUn-1."},
+{d:'easy', q:"The Law of Diminishing Marginal Utility states that:", o:["Total utility always falls as consumption rises","Marginal utility rises as more units are consumed","Marginal utility falls as more successive units of a good are consumed, other things remaining constant","Prices fall as consumption increases"], a:2, r:"As a consumer consumes successive units of the same good (ceteris paribus), the additional satisfaction from each extra unit tends to decline — this is the foundation of the cardinal utility approach."},
+{d:'easy', q:"When Marginal Utility becomes zero, Total Utility is:", o:["At its maximum", "At its minimum", "Zero", "Negative"], a:0, r:"Total Utility keeps rising as long as MU is positive. It reaches its maximum (peak) exactly when MU = 0 — this is the point of satiety."},
+{d:'easy', q:"Who is primarily associated with the Cardinal Utility Approach to consumer behaviour?", o:["Adam Smith","Alfred Marshall","John Maynard Keynes","David Ricardo"], a:1, r:"Alfred Marshall developed the cardinal (measurable) utility approach, assuming utility can be measured in numerical units called 'utils'."},
+{d:'easy', q:"An Indifference Curve represents:", o:["Combinations of two goods that cost the same amount","Combinations of two goods that give the consumer equal levels of satisfaction","The maximum quantity a consumer can afford","The relationship between price and quantity demanded"], a:1, r:"An indifference curve shows all combinations of two goods among which a consumer is indifferent — i.e., every combination on the curve yields the same total utility."},
+{d:'easy', q:"Indifference curves are typically drawn as:", o:["Upward sloping and convex to the origin","Downward sloping and convex to the origin","Straight vertical lines","Downward sloping and concave to the origin"], a:1, r:"Indifference curves slope downward (more of one good compensates for less of another) and are convex to the origin because of the diminishing Marginal Rate of Substitution."},
+{d:'easy', q:"A Budget Line shows:", o:["All combinations of two goods that give equal utility","All combinations of two goods a consumer prefers most","All combinations of two goods a consumer can purchase with a given income at given prices","The consumer's savings over time"], a:2, r:"The budget line (or price line) represents all combinations of two goods that exactly exhaust a consumer's given money income at prevailing market prices."},
+{d:'easy', q:"If a consumer's income rises while prices of both goods remain unchanged, the budget line will:", o:["Shift outward, parallel to the original line","Shift inward, parallel to the original line","Become steeper","Become flatter"], a:0, r:"A rise in income increases the maximum affordable quantity of both goods proportionally, shifting the budget line outward while keeping its slope (−Px/Py) unchanged, since relative prices haven't changed."},
+{d:'medium', q:"The slope of the budget line is given by:", o:["Px + Py","−Px/Py","Py/Px − 1","MUx/MUy"], a:1, r:"The budget line's equation is PxX + PyY = M. Rearranging for Y gives Y = M/Py − (Px/Py)X, so the slope is −Px/Py, the negative ratio of the two prices."},
+{d:'medium', q:"According to the Law of Equi-Marginal Utility, a consumer maximises satisfaction when they allocate income such that:", o:["MUx = MUy for all goods","MUx/Px = MUy/Py = ... = Marginal Utility of Money","Total utility from each good is equal","Price of each good is equal"], a:1, r:"The equi-marginal principle (Gossen's Second Law) states equilibrium is reached when the marginal utility per rupee spent is equalised across all goods, i.e. MUx/Px = MUy/Py, so no reallocation of spending can raise total utility."},
+{d:'medium', q:"The Marginal Rate of Substitution (MRS) of X for Y is defined as:", o:["The rate at which the price of X changes relative to Y","The amount of Y a consumer is willing to give up for one more unit of X, keeping utility constant","The ratio of total utility of X to total utility of Y","The rate at which income is spent on X versus Y"], a:1, r:"MRS(xy) measures how much of good Y a consumer will sacrifice to obtain one additional unit of X while remaining on the same indifference curve (constant total satisfaction)."},
+{d:'medium', q:"Why do indifference curves never intersect each other?", o:["Because utility cannot be measured","Because it would violate the assumption of transitivity/consistency of consumer preferences","Because prices are always different","Because income is limited"], a:1, r:"If two indifference curves intersected, the same combination of goods would simultaneously represent two different levels of satisfaction — a logical contradiction that violates the transitivity assumption of rational preferences."},
+{d:'medium', q:"At consumer equilibrium under the ordinal (indifference curve) approach, which condition holds?", o:["The indifference curve is tangent to the budget line, where MRSxy = Px/Py","The indifference curve crosses the budget line at two points","MUx = MUy regardless of price","The budget line lies entirely above the indifference curve"], a:0, r:"Equilibrium occurs where the highest attainable indifference curve is tangent to the budget line — at that point the slope of the indifference curve (MRS) equals the slope of the budget line (Px/Py)."},
+{d:'medium', q:"A fall in the price of good X, with income and the price of Y held constant, causes the budget line to:", o:["Shift inward, parallel to itself","Pivot outward along the X-axis, becoming flatter","Pivot inward along the X-axis, becoming steeper","Shift outward, parallel to itself"], a:1, r:"A lower price of X means more units of X can now be bought with the same income, so the intercept on the X-axis moves outward while the Y-axis intercept stays fixed — the line pivots and becomes flatter."},
+{d:'medium', q:"The Income Effect refers to:", o:["The change in quantity demanded of a good purely due to a change in its relative price","The change in quantity demanded resulting from a change in real income (purchasing power) after a price change","The change in a consumer's nominal income","The effect of advertising on income"], a:1, r:"When the price of a good falls, real income (purchasing power) effectively rises even though money income is unchanged. This pure change in purchasing power alters quantity demanded — the income effect."},
+{d:'medium', q:"The Substitution Effect refers to:", o:["The change in quantity demanded due purely to a change in relative price, holding real income (utility) constant", "The effect of one consumer's choices on another's","The change in demand due to a rise in population","The shift in the entire demand curve"], a:0, r:"The substitution effect isolates the impact of a change in relative prices on quantity demanded, keeping the consumer on the same indifference curve (constant real income), so only the relative attractiveness of goods changes."},
+{d:'medium', q:"For a Normal good, when income increases (prices constant), quantity demanded:", o:["Falls","Rises","Stays exactly the same","Becomes zero"], a:1, r:"By definition, a normal good has a positive income effect — as consumer income rises, demand for the good rises as well, shown by an outward shift of the budget line raising the equilibrium quantity."},
+{d:'medium', q:"For an Inferior good, the Income Effect on quantity demanded is:", o:["Positive (demand rises with income)","Zero","Negative (demand falls as income rises)","Always equal to the substitution effect"], a:2, r:"An inferior good is consumed less as income rises (e.g., coarse grains being replaced by finer ones), meaning its income effect works in the opposite direction to income — it is negative."},
+{d:'hard', q:"A Giffen good is best described as a good for which:", o:["Demand rises when price rises, because the negative income effect outweighs the substitution effect","Demand always falls when price falls, without exception","Demand is perfectly elastic","Consumers treat it as a luxury and buy more as income rises"], a:0, r:"A Giffen good is a special, extreme case of an inferior good where the negative income effect of a price rise is so strong it outweighs the normal (negative) substitution effect, causing quantity demanded to rise when price rises — violating the ordinary law of demand."},
+{d:'hard', q:"A Veblen good is characterised by which unusual demand behaviour?", o:["Demand rises with a rise in price because the good confers social status ('conspicuous consumption')","Demand is completely insensitive to price","Demand falls to zero above a certain price","Demand depends only on income, not price"], a:0, r:"Named after Thorstein Veblen, these are goods (e.g., luxury brands) where a higher price itself increases desirability by signalling status, so the demand curve can slope upward over some price range — driven by the good's role as a status symbol rather than pure economic income/substitution effects."},
+{d:'hard', q:"In the Hicksian (compensated) decomposition of the price effect, the substitution effect for ANY normal or inferior good is always:", o:["Positive (quantity moves in the same direction as the price change)","Negative (quantity moves opposite to the price change)","Zero","Undefined"], a:1, r:"Under Hicks's approach, the substitution effect is derived by holding utility (not money income) constant. Because indifference curves are convex, a fall in relative price of a good always raises its quantity demanded along the same indifference curve — the substitution effect is unambiguously negative (price and quantity move in opposite directions) regardless of whether the good is normal or inferior."},
+{d:'hard', q:"For a Giffen good, comparing the substitution effect and income effect of a price fall:", o:["Both effects push quantity demanded in the same direction","The substitution effect raises quantity demanded, but the (negative) income effect is larger and dominates, so quantity demanded falls overall","There is no substitution effect for Giffen goods","The income effect is zero"], a:1, r:"Even for a Giffen good, the substitution effect still works normally — a price fall raises quantity demanded via substitution. But because a Giffen good is so strongly inferior, its negative income effect (of a price fall raising real income) is large enough to outweigh the substitution effect, so the net (price) effect is a fall in quantity demanded — hence the upward-sloping demand curve."},
+{d:'hard', q:"Marshall's concept of Consumer's Surplus is measured as:", o:["The difference between total expenditure and total utility","The excess of what a consumer is willing to pay over what they actually pay for a good","The gap between marginal utility and total utility","The area between the budget line and the indifference curve"], a:1, r:"Consumer's surplus is the difference between the maximum price a consumer is willing and able to pay for a unit of a good (reflecting its marginal utility to them) and the price they actually pay in the market — geometrically, the area under the demand curve and above the market price line."},
+{d:'hard', q:"The Revealed Preference Theory, developed by Paul Samuelson, differs from the indifference curve approach mainly because it:", o:["Assumes utility can be measured in numbers", "Derives consumer preferences from observed market choices/behaviour rather than assuming a pre-existing preference map", "Ignores prices entirely","Requires knowledge of the consumer's psychological state"], a:1, r:"Revealed Preference Theory avoids introspective assumptions about a consumer's mental utility scale. Instead, it infers preferences purely from what a consumer is actually observed to choose at different price-income situations, using the Weak Axiom of Revealed Preference for consistency."},
+{d:'hard', q:"If two goods are Perfect Substitutes, the indifference curves between them are:", o:["Convex to the origin, as usual","L-shaped (right angles)","Straight downward-sloping lines (constant MRS)","Vertical straight lines"], a:2, r:"For perfect substitutes (e.g., two identical brands of the same product), the consumer is willing to trade one for the other at a constant fixed rate, so the MRS is constant along the curve — producing straight-line indifference curves rather than the usual convex shape."},
+{d:'hard', q:"If two goods are Perfect Complements (e.g., left and right shoes), the indifference curves are:", o:["Straight downward-sloping lines","L-shaped, with the corner representing the optimal fixed-ratio combination","Upward sloping","Circular"], a:1, r:"Perfect complements are always consumed together in a fixed ratio — extra units of only one good add no utility without the matching quantity of the other — producing L-shaped (right-angle) indifference curves whose corners trace the income-consumption path."},
+{d:'hard', q:"A 'corner solution' in consumer equilibrium occurs when:", o:["The indifference curve is tangent to the budget line at an interior point with both goods consumed","The consumer spends their entire income on only one good because the tangency (MRS = Px/Py) condition cannot be satisfied at any interior point","The consumer buys equal quantities of both goods","The budget line does not touch any indifference curve"], a:1, r:"A corner solution arises when the indifference curves are relatively flat or steep compared to the budget line everywhere, so the highest attainable satisfaction occurs at an axis intercept — the consumer spends all income on just one good rather than at an interior tangency point."}
+];
+
+/* ---------------- State ---------------- */
+let order = [];
+let current = 0;
+let score = 0;
+let maxScore = 0;
+let answers = []; // {qIndex, chosen, correct, timedOut}
+let timerInterval = null;
+let timeLeft = 0;
+let answered = false;
+let participantName = '';
+const PARTICIPANTS_KEY = 'cb_quiz_participants';
+
+const diffTime = {easy:15, medium:20, hard:25};
+const diffPoints = {easy:10, medium:15, hard:20};
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function show(id){
+  ['screen-start','screen-quiz','screen-results','screen-review','screen-admin'].forEach(s=>{
+    document.getElementById(s).classList.toggle('hidden', s!==id);
+  });
+}
+
+function beginQuiz(){
+  const input = document.getElementById('participant-name');
+  const val = input.value.trim();
+  const errorEl = document.getElementById('name-error');
+  if(!val){
+    errorEl.classList.remove('hidden');
+    input.focus();
+    return;
+  }
+  errorEl.classList.add('hidden');
+  participantName = val;
+  startQuiz();
+}
+
+function startQuiz(){
+  // preserve difficulty progression: easy block shuffled, medium block shuffled, hard block shuffled
+  const easyQ = shuffle(QUESTIONS.map((q,i)=>i).filter(i=>QUESTIONS[i].d==='easy'));
+  const medQ = shuffle(QUESTIONS.map((q,i)=>i).filter(i=>QUESTIONS[i].d==='medium'));
+  const hardQ = shuffle(QUESTIONS.map((q,i)=>i).filter(i=>QUESTIONS[i].d==='hard'));
+  order = [...easyQ, ...medQ, ...hardQ];
+  current = 0; score = 0; answers = [];
+  maxScore = order.reduce((sum,i)=>sum+diffPoints[QUESTIONS[i].d],0);
+  show('screen-quiz');
+  loadQuestion();
+}
+
+function loadQuestion(){
+  answered = false;
+  clearInterval(timerInterval);
+  const qi = order[current];
+  const q = QUESTIONS[qi];
+  document.getElementById('qcounter').textContent = `Question ${current+1} / ${order.length}`;
+  document.getElementById('scoretally').textContent = `Score: ${score}`;
+  document.getElementById('progress-fill').style.width = `${(current/order.length)*100}%`;
+  const badge = document.getElementById('diff-badge');
+  badge.textContent = q.d.charAt(0).toUpperCase()+q.d.slice(1);
+  badge.className = 'diff-badge diff-'+q.d;
+  document.getElementById('qtext').textContent = q.q;
+  document.getElementById('reason-box').style.display = 'none';
+  document.getElementById('next-btn').classList.add('hidden');
+
+  const optWrap = document.getElementById('options');
+  optWrap.innerHTML = '';
+  q.o.forEach((opt, idx)=>{
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="tag">${String.fromCharCode(65+idx)}</span><span>${opt}</span>`;
+    btn.onclick = ()=>selectAnswer(idx);
+    optWrap.appendChild(btn);
+  });
+
+  timeLeft = diffTime[q.d];
+  document.getElementById('timer-num').textContent = timeLeft+'s';
+  document.getElementById('timer-fill').style.width = '100%';
+  document.getElementById('timer-fill').style.background = 'var(--clay)';
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    document.getElementById('timer-num').textContent = timeLeft+'s';
+    document.getElementById('timer-fill').style.width = (timeLeft/diffTime[q.d]*100)+'%';
+    if(timeLeft<=0){
+      clearInterval(timerInterval);
+      selectAnswer(-1); // timeout, no answer chosen
+    }
+  },1000);
+}
+
+function selectAnswer(idx){
+  if(answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+  const qi = order[current];
+  const q = QUESTIONS[qi];
+  const opts = document.querySelectorAll('.option');
+  opts.forEach((b,i)=>{
+    b.disabled = true;
+    if(i===q.a) b.classList.add('correct');
+    else if(i===idx) b.classList.add('wrong');
+  });
+  const isCorrect = idx===q.a;
+  if(isCorrect) score += diffPoints[q.d];
+  answers.push({qIndex:qi, chosen:idx, correct:isCorrect});
+  document.getElementById('scoretally').textContent = `Score: ${score}`;
+  const rb = document.getElementById('reason-box');
+  rb.style.display = 'block';
+  rb.innerHTML = `<strong>${isCorrect? 'Correct.' : (idx===-1? "Time's up." : 'Not quite.')}</strong> ${q.r}`;
+  document.getElementById('next-btn').classList.remove('hidden');
+  document.getElementById('next-btn').textContent = (current===order.length-1)? 'See results →' : 'Next question →';
+}
+
+function nextQuestion(){
+  current++;
+  if(current>=order.length){
+    finishQuiz();
+  } else {
+    loadQuestion();
+  }
+}
+
+function finishQuiz(){
+  document.getElementById('progress-fill').style.width='100%';
+  const correctCount = answers.filter(a=>a.correct).length;
+  const wrongCount = answers.length-correctCount;
+  const pct = Math.round((score/maxScore)*100);
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('final-sub').textContent = `out of ${maxScore} points (${pct}%)`;
+  document.getElementById('b-correct').textContent = correctCount;
+  document.getElementById('b-wrong').textContent = wrongCount;
+  let grade = 'D — Keep practising';
+  if(pct>=90) grade='A+ — Excellent grasp';
+  else if(pct>=75) grade='A — Strong understanding';
+  else if(pct>=60) grade='B — Good, some gaps';
+  else if(pct>=40) grade='C — Needs revision';
+  document.getElementById('grade-pill').textContent = 'Grade: '+grade;
+  recordParticipant(score, maxScore, pct);
+  show('screen-results');
+}
+
+function recordParticipant(finalScore, finalMax, finalPct){
+  try{
+    const list = JSON.parse(localStorage.getItem(PARTICIPANTS_KEY) || '[]');
+    list.push({
+      name: participantName || 'Anonymous',
+      score: finalScore,
+      maxScore: finalMax,
+      pct: finalPct,
+      date: new Date().toLocaleString()
+    });
+    localStorage.setItem(PARTICIPANTS_KEY, JSON.stringify(list));
+  }catch(e){
+    console.error('Could not record participant:', e);
+  }
+}
+
+function isAdminMode(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get('admin') === 'true';
+}
+
+function renderAdmin(){
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem(PARTICIPANTS_KEY) || '[]'); }catch(e){ list = []; }
+  document.getElementById('admin-count').textContent = list.length;
+  const wrap = document.getElementById('admin-list');
+  if(list.length===0){
+    wrap.innerHTML = '<div class="admin-empty">No participants yet. This updates automatically as people complete the quiz.</div>';
+    return;
+  }
+  wrap.innerHTML = list.slice().reverse().map(p=>`
+    <div class="admin-row">
+      <span class="a-name">${p.name}</span>
+      <span class="a-meta">${p.score}/${p.maxScore} pts (${p.pct}%)</span>
+      <span class="a-meta">${p.date}</span>
+    </div>
+  `).join('');
+}
+
+function initAdminIfNeeded(){
+  if(!isAdminMode()) return;
+  show('screen-admin');
+  renderAdmin();
+  setInterval(renderAdmin, 2000);
+  window.addEventListener('storage', (e)=>{ if(e.key===PARTICIPANTS_KEY) renderAdmin(); });
+}
+initAdminIfNeeded();
+
+function showReview(){
+  const list = document.getElementById('review-list');
+  list.innerHTML = '';
+  answers.forEach((a,i)=>{
+    const q = QUESTIONS[a.qIndex];
+    const div = document.createElement('div');
+    div.className = 'review-item';
+    const chosenText = a.chosen===-1? '(No answer — time expired)' : q.o[a.chosen];
+    div.innerHTML = `
+      <div class="rq">${i+1}. ${q.q}</div>
+      <div class="review-row"><span class="lab">Your answer</span><span class="${a.correct?'pill-correct':'pill-wrong'}">${chosenText} ${a.correct? '✓':'✗'}</span></div>
+      ${!a.correct? `<div class="review-row"><span class="lab">Correct answer</span><span class="pill-correct">${q.o[q.a]} ✓</span></div>`:''}
+      <div class="review-reason"><strong>Model reasoning:</strong> ${q.r}</div>
+    `;
+    list.appendChild(div);
+  });
+  show('screen-review');
+}
+
+function backToResults(){ show('screen-results'); }
+
+function restartQuiz(){ startQuiz(); }
+
+</script>
+</body>
+</html>
